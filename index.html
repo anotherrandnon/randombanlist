@@ -1,0 +1,139 @@
+<script type="text/javascript" src="random.js"></script>
+<script type="text/javascript" src="dict.js"></script>
+<script type="text/javascript">
+
+	var unlimited=[];
+	var semilimited=[];
+	var limited=[];
+	var forbidden=[];
+	var banlistString="";
+	
+	function resetInternalArrays(){
+		unlimited=[];
+		semilimited=[];
+		limited=[];
+		forbidden=[];
+	}
+
+	function generateBanlist() {
+		resetInternalArrays();
+		keys=Object.keys(dict);
+		var seed=xmur3(document.getElementById("initialSeed").value);
+		var rng=sfc32(seed(),seed(),seed(),seed());
+		for(let i=0;i<keys.length;i++){
+			var allowed = Math.floor(rng()*4)
+			switch(allowed){
+				case 3:
+					unlimited.push(keys[i]);
+					break;
+				case 2:
+					semilimited.push(keys[i]);
+					break;
+				case 1:
+					limited.push(keys[i]);
+					break;
+				case 0:
+					forbidden.push(keys[i]);
+					break;
+			}
+		}
+		displayTextBanlist();
+		document.getElementById("downloadBanlistBtn").style.display="block";
+	}
+	
+	function displayTextBanlist(){
+		var at3text="";
+		for(let i=0;i<unlimited.length;i++){
+			at3text=at3text+dict[unlimited[i]]+", ";
+		}
+		document.getElementById("at3").innerHTML=at3text;
+		var at2text="";
+		for(let i=0;i<semilimited.length;i++){
+			at2text=at2text+dict[semilimited[i]]+", ";
+		}
+		document.getElementById("at2").innerHTML=at2text;
+		var at1text="";
+		for(let i=0;i<limited.length;i++){
+			at1text=at1text+dict[limited[i]]+", ";
+		}
+		document.getElementById("at1").innerHTML=at1text;
+		var at0text="";
+		for(let i=0;i<forbidden.length;i++){
+			at0text=at0text+dict[forbidden[i]]+", ";
+		}
+		document.getElementById("at0").innerHTML=at0text;
+	}
+	
+	function downloadBanlist() {
+		var banlistString="!Random Banlist: "+document.getElementById("initialSeed").value;
+		/*
+		a whitelist does solve the problem of future cards being released but also causes a huge issue with pre-errata/anime/manga versions of cards
+		banlistString=banlistString+"\n$whitelist";
+		
+		//only a whitelist needs the cards that are at 3, we can skip this for a banlist
+		banlistString=banlistString+"\n#Unlimited";
+		for(let i=0;i<unlimited.length;i++){
+			banlistString=banlistString+"\n"+unlimited[i]+" 3 -- "+dict[unlimited[i]];
+		}
+		*/
+		banlistString=banlistString+"\n#Semi-limited";
+		for(let i=0;i<semilimited.length;i++){
+			banlistString=banlistString+"\n"+semilimited[i]+" 2 -- "+dict[semilimited[i]];
+		}
+		banlistString=banlistString+"\n#Limited";
+		for(let i=0;i<limited.length;i++){
+			banlistString=banlistString+"\n"+limited[i]+" 1 -- "+dict[limited[i]];
+		}
+		banlistString=banlistString+"\n#Forbidden";
+		for(let i=0;i<forbidden.length;i++){
+			banlistString=banlistString+"\n"+forbidden[i]+" 0 -- "+dict[forbidden[i]];
+		}
+		
+		var element=document.createElement('a');
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,'+encodeURIComponent(banlistString));
+		element.setAttribute('download',""+document.getElementById("initialSeed").value+".conf");
+		element.style.display='none';
+		document.body.appendChild(element);
+		element.click();
+		document.body.removeChild(element);
+  	}
+
+</script>
+
+<style>
+#error{
+	color:#FF0000;
+	font-weight: bold;
+}
+</style>
+
+<html>
+<head>
+	<title>Randomized Banlist Generator</title>
+</head>
+<body>
+	<div
+		style='position:absolute; left:680'>
+		<a 
+			class='hyperlink'
+			target='_blank'
+			href='https://github.com/anotherrandnon/randombanlist'>source on github</a>
+		<br/>
+	</div>
+	<span class='txt'>Post number: </span>
+	<input type='text' id='initialSeed'/>
+	<button id='generateBanlistBtn' onclick='generateBanlist()'>Generate Banlist</button>
+	<div id='error'></div><br/>
+	<button id='downloadBanlistBtn' onclick='downloadBanlist()' style='display:none;'>Download Banlist</button><br/>
+	<div id='banlistlist'>
+		<h2>Unlimited</h2><br/>
+		<div id='at3'></div><br/>
+		<h2>Semi-Limited</h2><br/>
+		<div id='at2'></div><br/>
+		<h2>Limited</h2><br/>
+		<div id='at1'></div><br/>
+		<h2>Forbidden</h2><br/>
+		<div id='at0'></div><br/>
+	</div>
+</body>
+</html>
